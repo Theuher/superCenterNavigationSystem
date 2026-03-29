@@ -1,0 +1,11 @@
+server:
+  port: ${PRODUCT_SERVICE_PORT:8082}
+
+spring:
+  mongodb:
+    uri: ${PRODUCT_MONGO_URI:mongodb://mongodb:27017/supercenter_product_db}
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me-please-change-me-please-change-me-please-change-me}

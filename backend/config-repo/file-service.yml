@@ -1,0 +1,14 @@
+server:
+  port: ${FILE_SERVICE_PORT:8085}
+
+app:
+  storage:
+    minio:
+      bucket: ${MINIO_BUCKET:supercenter-files}
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: ${FILE_MAX_SIZE:20MB}
+      max-request-size: ${FILE_MAX_REQUEST_SIZE:25MB}
+

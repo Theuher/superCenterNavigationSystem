@@ -1,3 +1,10 @@
 spring:
   application:
     name: product-service
+  config:
+    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888}
+  mongodb:
+    uri: ${SPRING_MONGODB_URI:mongodb://mongodb:27017/supercenter_product_db}
+  cloud:
+    config:
+      fail-fast: false

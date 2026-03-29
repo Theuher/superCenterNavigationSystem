@@ -1,0 +1,71 @@
+name: Frontend CI/CD
+
+on:
+  pull_request:
+    paths:
+      - "frontend/store-navigation-frontend/**"
+      - ".github/workflows/frontend.yml"
+  push:
+    branches: ["main"]
+    paths:
+      - "frontend/store-navigation-frontend/**"
+      - ".github/workflows/frontend.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend/store-navigation-frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/store-navigation-frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+  docker-image:
+    name: Build and Push Frontend Image
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ./frontend/store-navigation-frontend
+          file: ./frontend/store-navigation-frontend/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/scn-frontend:latest
+            ghcr.io/${{ github.repository_owner }}/scn-frontend:${{ github.sha }}
+

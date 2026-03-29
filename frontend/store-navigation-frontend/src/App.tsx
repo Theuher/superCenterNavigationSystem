@@ -1,34 +1,35 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
+import { Navigate, Route, Routes } from 'react-router-dom'
+import { AuthProvider } from './auth/AuthContext'
+import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
+import LoginPage from './pages/LoginPage'
+import RegisterPage from './pages/RegisterPage'
+import ProductsPage from './pages/ProductsPage'
+import LocationsPage from './pages/LocationsPage'
+import ProfilePage from './pages/ProfilePage'
+import RoleManagementPage from './pages/RoleManagementPage'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <AuthProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<Layout />}>
+            <Route path="/products" element={<ProductsPage />} />
+            <Route path="/locations" element={<LocationsPage />} />
+            <Route path="/profile" element={<ProfilePage />} />
+            <Route element={<ProtectedRoute roles={['ROLE_MANAGER', 'ROLE_ADMIN']} />}>
+              <Route path="/roles" element={<RoleManagementPage />} />
+            </Route>
+            <Route path="*" element={<Navigate to="/products" replace />} />
+          </Route>
+        </Route>
+      </Routes>
+    </AuthProvider>
   )
 }
 

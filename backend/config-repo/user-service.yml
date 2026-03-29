@@ -1,0 +1,21 @@
+server:
+  port: ${USER_SERVICE_PORT:8084}
+
+spring:
+  datasource:
+    url: ${USER_DB_URL:jdbc:mysql://localhost:3306/user_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${USER_DB_USERNAME:root}
+    password: ${USER_DB_PASSWORD:root}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+
+app:
+  security:
+    jwt:
+      secret: ${JWT_SECRET:change-me-please-change-me-please-change-me-please-change-me}
+

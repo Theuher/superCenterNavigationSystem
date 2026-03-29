@@ -1,0 +1,15 @@
+server:
+  port: ${REPORT_SERVICE_PORT:8086}
+
+app:
+  reporting:
+    jasper:
+      templates-path: ${JASPER_TEMPLATES_PATH:classpath:/reports}
+      temp-dir: ${JASPER_TEMP_DIR:./tmp/reports}
+  messaging:
+    report-request-queue: ${REPORT_REQUEST_QUEUE:report.request.queue}
+    report-ready-queue: ${REPORT_READY_QUEUE:report.ready.queue}
+  storage:
+    minio:
+      bucket: ${REPORT_BUCKET:supercenter-reports}
+
