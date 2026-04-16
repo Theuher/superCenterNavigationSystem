@@ -132,15 +132,15 @@ const LocationsPage = () => {
             <tbody>
               {locations.map((location) => (
                 <tr key={location.id}>
-                  <td>{location.code}</td>
-                  <td>{location.zone}</td>
-                  <td>{location.aisle}</td>
-                  <td>{location.shelf}</td>
-                  <td>{location.floor}</td>
-                  <td>{location.mapX}</td>
-                  <td>{location.mapY}</td>
+                  <td data-label="Код">{location.code}</td>
+                  <td data-label="Бүс">{location.zone}</td>
+                  <td data-label="Эгнээ">{location.aisle}</td>
+                  <td data-label="Тавиур">{location.shelf}</td>
+                  <td data-label="Давхар">{location.floor}</td>
+                  <td data-label="X">{location.mapX}</td>
+                  <td data-label="Y">{location.mapY}</td>
                   {canManage && (
-                    <td>
+                    <td data-label="Үйлдэл">
                       {deleteConfirmId === location.id ? (
                         <div className="action-buttons">
                           <button type="button" onClick={() => void onConfirmDelete(location.id)}>Тийм</button>

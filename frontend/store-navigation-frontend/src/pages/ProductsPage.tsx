@@ -202,13 +202,13 @@ const ProductsPage = () => {
             <tbody>
               {products.map((product) => (
                 <tr key={product.id}>
-                  <td>{product.name}</td>
-                  <td>{product.sku}</td>
-                  <td>{categoryNameById(product.categoryId)}</td>
-                  <td>{locationCodeById(product.locationId)}</td>
-                  <td>{product.price}</td>
+                  <td data-label="Нэр">{product.name}</td>
+                  <td data-label="SKU">{product.sku}</td>
+                  <td data-label="Ангилал">{categoryNameById(product.categoryId)}</td>
+                  <td data-label="Байршил">{locationCodeById(product.locationId)}</td>
+                  <td data-label="Үнэ">{product.price}</td>
                   {canManage && (
-                    <td>
+                    <td data-label="Үйлдэл">
                       {productDeleteConfirmId === product.id ? (
                         <div className="action-buttons">
                           <button type="button" onClick={() => void onConfirmDeleteProduct(product.id)}>Тийм</button>
@@ -310,9 +310,9 @@ const ProductsPage = () => {
                 <tbody>
                   {categories.map((category) => (
                     <tr key={category.id}>
-                      <td>{category.name}</td>
-                      <td>{category.description}</td>
-                      <td>
+                      <td data-label="Нэр">{category.name}</td>
+                      <td data-label="Тайлбар">{category.description}</td>
+                      <td data-label="Үйлдэл">
                         {categoryDeleteConfirmId === category.id ? (
                           <div className="action-buttons">
                             <button type="button" onClick={() => void onConfirmDeleteCategory(category.id)}>Тийм</button>

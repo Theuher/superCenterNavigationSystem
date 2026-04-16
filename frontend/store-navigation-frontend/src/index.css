@@ -1,6 +1,6 @@
 :root {
   font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.4;
+  line-height: 1.5;
   font-weight: 400;
   color: #0f172a;
   background-color: #f8fafc;
@@ -35,9 +35,11 @@ button {
   border-radius: 0.45rem;
   background: #2563eb;
   color: #ffffff;
-  padding: 0.55rem 0.85rem;
+  padding: 0.62rem 0.9rem;
+  min-height: 2.6rem;
   cursor: pointer;
   font-weight: 600;
+  font-size: 0.95rem;
 }
 
 button:disabled {

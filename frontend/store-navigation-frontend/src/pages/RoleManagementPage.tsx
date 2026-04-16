@@ -86,11 +86,11 @@ const RoleManagementPage = () => {
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={4}>Ачааллаж байна...</td>
+                  <td colSpan={4} data-label="Төлөв">Ачааллаж байна...</td>
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={4}>Жагсаах хэрэглэгч алга.</td>
+                  <td colSpan={4} data-label="Төлөв">Жагсаах хэрэглэгч алга.</td>
                 </tr>
               ) : (
                 users.map((target) => {
@@ -99,10 +99,10 @@ const RoleManagementPage = () => {
 
                   return (
                     <tr key={target.id}>
-                      <td>{target.fullName}</td>
-                      <td>{target.email}</td>
-                      <td>{target.roles.map((role) => roleToLabel[role]).join(', ')}</td>
-                      <td>
+                      <td data-label="Овог нэр">{target.fullName}</td>
+                      <td data-label="И-мэйл">{target.email}</td>
+                      <td data-label="Одоогийн эрх">{target.roles.map((role) => roleToLabel[role]).join(', ')}</td>
+                      <td data-label="Шинэ эрх">
                         {options.length === 0 || target.email === user?.email ? (
                           <span className="muted">Өөрчлөх боломжгүй</span>
                         ) : (
