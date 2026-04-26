@@ -131,7 +131,7 @@ public class AuthService {
             throw new IllegalArgumentException("You are not allowed to change roles.");
         }
 
-        if (isManager) {
+        if (isManager && !isAdmin) {
             boolean targetIsPrivileged = target.getRoles().stream()
                     .anyMatch(role -> role.getName() == RoleName.ROLE_ADMIN || role.getName() == RoleName.ROLE_MANAGER);
             if (targetIsPrivileged) {
