@@ -20,11 +20,34 @@ const AuthContext = createContext<AuthContextValue | undefined>(undefined)
 const TOKEN_KEY = 'scn_token'
 const USER_KEY = 'scn_user'
 
+const normalizeRole = (value: unknown): Role | null => {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const raw = value.trim().toUpperCase()
+  if (raw === 'ROLE_USER' || raw === 'ROLE_STAFF' || raw === 'ROLE_MANAGER' || raw === 'ROLE_ADMIN') {
+    return raw
+  }
+
+  if (raw === 'USER') return 'ROLE_USER'
+  if (raw === 'STAFF') return 'ROLE_STAFF'
+  if (raw === 'MANAGER') return 'ROLE_MANAGER'
+  if (raw === 'ADMIN') return 'ROLE_ADMIN'
+
+  return null
+}
+
 const toRoleArray = (value: unknown): Role[] => {
   if (!Array.isArray(value)) {
     return []
   }
-  return value.filter((item): item is Role => typeof item === 'string' && item.startsWith('ROLE_'))
+
+  const normalized = value
+    .map((item) => normalizeRole(item))
+    .filter((item): item is Role => item !== null)
+
+  return Array.from(new Set(normalized))
 }
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
@@ -45,10 +68,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, [token])
 
   const applyAuthResponse = (response: AuthResponse) => {
+    const mergedRoles = Array.from(new Set([...toRoleArray(response.user?.roles), ...toRoleArray(response.roles)]))
+    const nextUser: Profile = {
+      ...response.user,
+      roles: mergedRoles,
+    }
+
     setToken(response.accessToken)
-    setUser(response.user)
+    setUser(nextUser)
     localStorage.setItem(TOKEN_KEY, response.accessToken)
-    localStorage.setItem(USER_KEY, JSON.stringify(response.user))
+    localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
   }
 
   const login = async (email: string, password: string) => {
@@ -71,14 +100,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const refreshProfile = async () => {
     const profile = await getMe()
-    setUser(profile)
-    localStorage.setItem(USER_KEY, JSON.stringify(profile))
+    const normalizedProfile: Profile = { ...profile, roles: toRoleArray(profile.roles) }
+    setUser(normalizedProfile)
+    localStorage.setItem(USER_KEY, JSON.stringify(normalizedProfile))
   }
 
   const saveProfile = async (payload: { fullName?: string; password?: string }) => {
     const profile = await updateMe(payload)
-    setUser(profile)
-    localStorage.setItem(USER_KEY, JSON.stringify(profile))
+    const normalizedProfile: Profile = { ...profile, roles: toRoleArray(profile.roles) }
+    setUser(normalizedProfile)
+    localStorage.setItem(USER_KEY, JSON.stringify(normalizedProfile))
   }
 
   const hasAnyRole = (roles: Role[]) => {

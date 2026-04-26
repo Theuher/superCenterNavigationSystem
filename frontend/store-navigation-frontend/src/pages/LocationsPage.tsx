@@ -1,13 +1,20 @@
-import { useEffect, useState } from 'react'
-import { createLocation, deleteLocation, listLocations, updateLocation } from '../api/catalog'
+﻿import { useEffect, useMemo, useState } from 'react'
+import { listCategories, listProducts, createLocation, deleteLocation, listLocations, updateLocation } from '../api/catalog'
 import { useAuth } from '../auth/AuthContext'
-import type { Location } from '../types'
+import type { Category, Location, Product } from '../types'
 
 const LocationsPage = () => {
   const { hasAnyRole } = useAuth()
   const canManage = hasAnyRole(['ROLE_STAFF', 'ROLE_MANAGER', 'ROLE_ADMIN'])
 
   const [locations, setLocations] = useState<Location[]>([])
+  const [products, setProducts] = useState<Product[]>([])
+  const [categories, setCategories] = useState<Category[]>([])
+  const [loadError, setLoadError] = useState('')
+  const [accessNote, setAccessNote] = useState('')
+
+  const [search, setSearch] = useState('')
+  const [selectedProductId, setSelectedProductId] = useState('')
 
   const [code, setCode] = useState('')
   const [zone, setZone] = useState('')
@@ -29,14 +36,70 @@ const LocationsPage = () => {
   const [editNote, setEditNote] = useState('')
   const [deleteConfirmId, setDeleteConfirmId] = useState('')
 
-  const loadLocations = async () => {
-    const data = await listLocations()
-    setLocations(data)
+  const loadData = async (query?: string) => {
+    setLoadError('')
+    setAccessNote('')
+
+    const [locationsResult, productsResult, categoriesResult] = await Promise.allSettled([
+      listLocations(),
+      listProducts(query),
+      listCategories(),
+    ])
+
+    if (locationsResult.status === 'fulfilled') {
+      setLocations(locationsResult.value)
+    } else {
+      setLocations([])
+      setLoadError('Байршлын мэдээлэл ачаалж чадсангүй. Серверийн хандалтын эрхийг шалгана уу.')
+    }
+
+    if (productsResult.status === 'fulfilled') {
+      setProducts(productsResult.value)
+      if (!selectedProductId && productsResult.value.length > 0) {
+        setSelectedProductId(productsResult.value[0].id)
+      }
+    } else {
+      setProducts([])
+      setLoadError('Барааны мэдээлэл ачаалж чадсангүй. Серверийн хандалтын эрхийг шалгана уу.')
+    }
+
+    if (categoriesResult.status === 'fulfilled') {
+      setCategories(categoriesResult.value)
+    } else {
+      setCategories([])
+      setAccessNote('Ангиллын мэдээлэлд зочин хандалт хаалттай байна. Хайлтын үндсэн функц ажиллана.')
+    }
   }
 
   useEffect(() => {
-    void loadLocations()
+    void loadData()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  const selectedProduct = useMemo(() => products.find((item) => item.id === selectedProductId) || null, [products, selectedProductId])
+  const selectedLocation = useMemo(
+    () => (selectedProduct ? locations.find((location) => location.id === selectedProduct.locationId) || null : null),
+    [locations, selectedProduct],
+  )
+
+  const relatedProducts = useMemo(() => {
+    if (!selectedProduct) return []
+    return products.filter((item) => item.id !== selectedProduct.id && item.locationId === selectedProduct.locationId).slice(0, 4)
+  }, [products, selectedProduct])
+
+  const categoryNameById = (id: string) => categories.find((item) => item.id === id)?.name || id
+
+  const mapPosition = useMemo(() => {
+    if (!selectedLocation) return { top: '48%', left: '46%' }
+    const normalizedX = Math.max(4, Math.min(95, selectedLocation.mapX))
+    const normalizedY = Math.max(4, Math.min(95, selectedLocation.mapY))
+    return { top: `${normalizedY}%`, left: `${normalizedX}%` }
+  }, [selectedLocation])
+
+  const onSearch = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    await loadData(search)
+  }
 
   const onCreate = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -59,7 +122,7 @@ const LocationsPage = () => {
     setMapX('0')
     setMapY('0')
     setNote('')
-    await loadLocations()
+    await loadData(search)
   }
 
   const onStartEdit = (location: Location) => {
@@ -99,7 +162,7 @@ const LocationsPage = () => {
       note: editNote || undefined,
     })
     onCancelEdit()
-    await loadLocations()
+    await loadData(search)
   }
 
   const onConfirmDelete = async (id: string) => {
@@ -108,13 +171,120 @@ const LocationsPage = () => {
     if (editId === id) {
       onCancelEdit()
     }
-    await loadLocations()
+    await loadData(search)
   }
 
   return (
-    <section className="grid-section">
-      <article className="card full-width">
-        <h2>Байршлууд</h2>
+    <section className="dashboard-grid">
+      <article className="panel span-12">
+        <h3>Хайлт ба план зураг</h3>
+        {loadError && <p className="error">{loadError}</p>}
+        {accessNote && <p className="muted">{accessNote}</p>}
+        <form className="inline-form" onSubmit={onSearch}>
+          <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Нэр, код, ангиллаар бараа хайх" />
+          <button type="submit" className="btn btn-primary">
+            Хайх
+          </button>
+        </form>
+      </article>
+
+      <article className="panel span-4">
+        <h3>Сонгосон бараа</h3>
+        <label>
+          Бараа
+          <select value={selectedProductId} onChange={(event) => setSelectedProductId(event.target.value)}>
+            {products.map((product) => (
+              <option key={product.id} value={product.id}>
+                {product.name}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {selectedProduct ? (
+          <div className="card-list">
+            <div className="product-row">
+              <div className="product-icon">🛒</div>
+              <div className="product-meta">
+                <h4>{selectedProduct.name}</h4>
+                <p>{categoryNameById(selectedProduct.categoryId)}</p>
+              </div>
+              <strong>₮{selectedProduct.price.toLocaleString()}</strong>
+            </div>
+            <p className="muted">SKU: {selectedProduct.sku}</p>
+            <p className="muted">Тайлбар: {selectedProduct.description || 'Тайлбар байхгүй'}</p>
+          </div>
+        ) : (
+          <p className="muted">Бараа сонгогдоогүй байна.</p>
+        )}
+
+        <h4>Ойролцоох бараа</h4>
+        <div className="card-list">
+          {relatedProducts.length === 0 ? (
+            <p className="muted">Энэ байршилд өөр бараа алга.</p>
+          ) : (
+            relatedProducts.map((product) => (
+              <div className="product-row" key={product.id}>
+                {product.imageUrl ? (
+                  <img className="product-thumb product-thumb--small" src={product.imageUrl} alt={product.name} loading="lazy" />
+                ) : (
+                  <div className="product-icon">📦</div>
+                )}
+                <div className="product-meta">
+                  <h4>{product.name}</h4>
+                  <p>{product.sku}</p>
+                </div>
+                <strong>₮{product.price.toLocaleString()}</strong>
+              </div>
+            ))
+          )}
+        </div>
+      </article>
+
+      <article className="panel span-8">
+        <h3>Дэлгүүрийн план зураг</h3>
+        <div className="map-grid">
+          <div className="floor-map">
+            <span className="map-pin" style={mapPosition} />
+          </div>
+
+          <div>
+            <h4>Байршлын дэлгэрэнгүй</h4>
+            {selectedLocation ? (
+              <div className="card-list">
+                <p>
+                  <strong>Код:</strong> {selectedLocation.code}
+                </p>
+                <p>
+                  <strong>Давхар:</strong> {selectedLocation.floor}
+                </p>
+                <p>
+                  <strong>Бүс:</strong> {selectedLocation.zone}
+                </p>
+                <p>
+                  <strong>Эгнээ:</strong> {selectedLocation.aisle}
+                </p>
+                <p>
+                  <strong>Тавиур:</strong> {selectedLocation.shelf}
+                </p>
+                <p>
+                  <strong>Координат:</strong> ({selectedLocation.mapX}, {selectedLocation.mapY})
+                </p>
+                {selectedLocation.note && (
+                  <p>
+                    <strong>Тэмдэглэл:</strong> {selectedLocation.note}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <p className="muted">Энэ бараанд байршлын мэдээлэл холбогдоогүй байна.</p>
+            )}
+          </div>
+        </div>
+      </article>
+
+      <article className="panel span-12">
+        <h3>Байршлын бүртгэл</h3>
         <div className="table-wrap">
           <table>
             <thead>
@@ -143,13 +313,21 @@ const LocationsPage = () => {
                     <td data-label="Үйлдэл">
                       {deleteConfirmId === location.id ? (
                         <div className="action-buttons">
-                          <button type="button" onClick={() => void onConfirmDelete(location.id)}>Тийм</button>
-                          <button type="button" onClick={() => setDeleteConfirmId('')}>Үгүй</button>
+                          <button type="button" className="btn btn-danger" onClick={() => void onConfirmDelete(location.id)}>
+                            Батлах
+                          </button>
+                          <button type="button" className="btn btn-secondary" onClick={() => setDeleteConfirmId('')}>
+                            Цуцлах
+                          </button>
                         </div>
                       ) : (
                         <div className="action-buttons">
-                          <button type="button" onClick={() => onStartEdit(location)}>Засах</button>
-                          <button type="button" onClick={() => setDeleteConfirmId(location.id)}>Устгах</button>
+                          <button type="button" className="btn btn-secondary" onClick={() => onStartEdit(location)}>
+                            Засах
+                          </button>
+                          <button type="button" className="btn btn-danger" onClick={() => setDeleteConfirmId(location.id)}>
+                            Устгах
+                          </button>
                         </div>
                       )}
                     </td>
@@ -159,94 +337,102 @@ const LocationsPage = () => {
             </tbody>
           </table>
         </div>
-
-        {canManage && editId && (
-          <form className="sub-card" onSubmit={onSubmitEdit}>
-            <h3>Байршил засах</h3>
-            <label>
-              Код
-              <input value={editCode} onChange={(e) => setEditCode(e.target.value)} required />
-            </label>
-            <label>
-              Бүс
-              <input value={editZone} onChange={(e) => setEditZone(e.target.value)} required />
-            </label>
-            <label>
-              Эгнээ
-              <input value={editAisle} onChange={(e) => setEditAisle(e.target.value)} required />
-            </label>
-            <label>
-              Тавиур
-              <input value={editShelf} onChange={(e) => setEditShelf(e.target.value)} required />
-            </label>
-            <label>
-              Давхар
-              <input type="number" value={editFloor} onChange={(e) => setEditFloor(e.target.value)} required />
-            </label>
-            <label>
-              Газрын зураг X
-              <input type="number" value={editMapX} onChange={(e) => setEditMapX(e.target.value)} required />
-            </label>
-            <label>
-              Газрын зураг Y
-              <input type="number" value={editMapY} onChange={(e) => setEditMapY(e.target.value)} required />
-            </label>
-            <label>
-              Тэмдэглэл
-              <textarea value={editNote} onChange={(e) => setEditNote(e.target.value)} />
-            </label>
-            <div className="action-buttons">
-              <button type="submit">Хадгалах</button>
-              <button type="button" onClick={onCancelEdit}>Цуцлах</button>
-            </div>
-          </form>
-        )}
       </article>
 
       {canManage && (
-        <form className="card" onSubmit={onCreate}>
-          <h3>Байршил нэмэх</h3>
-          <label>
-            Код
-            <input value={code} onChange={(e) => setCode(e.target.value)} required />
-          </label>
-          <label>
-            Бүс
-            <input value={zone} onChange={(e) => setZone(e.target.value)} required />
-          </label>
-          <label>
-            Эгнээ
-            <input value={aisle} onChange={(e) => setAisle(e.target.value)} required />
-          </label>
-          <label>
-            Тавиур
-            <input value={shelf} onChange={(e) => setShelf(e.target.value)} required />
-          </label>
-          <label>
-            Давхар
-            <input type="number" value={floor} onChange={(e) => setFloor(e.target.value)} required />
-          </label>
-          <label>
-            Газрын зураг X
-            <input type="number" value={mapX} onChange={(e) => setMapX(e.target.value)} required />
-          </label>
-          <label>
-            Газрын зураг Y
-            <input type="number" value={mapY} onChange={(e) => setMapY(e.target.value)} required />
-          </label>
-          <label>
-            Тэмдэглэл
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} />
-          </label>
-          <button type="submit">Байршил үүсгэх</button>
-        </form>
+        <>
+          <article className="panel span-6">
+            <h3>Шинэ байршил нэмэх</h3>
+            <form className="form-grid" onSubmit={onCreate}>
+              <label>
+                Код
+                <input value={code} onChange={(event) => setCode(event.target.value)} required />
+              </label>
+              <label>
+                Бүс
+                <input value={zone} onChange={(event) => setZone(event.target.value)} required />
+              </label>
+              <label>
+                Эгнээ
+                <input value={aisle} onChange={(event) => setAisle(event.target.value)} required />
+              </label>
+              <label>
+                Тавиур
+                <input value={shelf} onChange={(event) => setShelf(event.target.value)} required />
+              </label>
+              <label>
+                Давхар
+                <input type="number" value={floor} onChange={(event) => setFloor(event.target.value)} required />
+              </label>
+              <label>
+                Координат X
+                <input type="number" value={mapX} onChange={(event) => setMapX(event.target.value)} required />
+              </label>
+              <label>
+                Координат Y
+                <input type="number" value={mapY} onChange={(event) => setMapY(event.target.value)} required />
+              </label>
+              <label>
+                Тэмдэглэл
+                <input value={note} onChange={(event) => setNote(event.target.value)} />
+              </label>
+              <button type="submit" className="btn btn-primary full">
+                Байршил хадгалах
+              </button>
+            </form>
+          </article>
+
+          {editId && (
+            <article className="panel span-6">
+              <h3>Байршил засах</h3>
+              <form className="form-grid" onSubmit={onSubmitEdit}>
+                <label>
+                  Код
+                  <input value={editCode} onChange={(event) => setEditCode(event.target.value)} required />
+                </label>
+                <label>
+                  Бүс
+                  <input value={editZone} onChange={(event) => setEditZone(event.target.value)} required />
+                </label>
+                <label>
+                  Эгнээ
+                  <input value={editAisle} onChange={(event) => setEditAisle(event.target.value)} required />
+                </label>
+                <label>
+                  Тавиур
+                  <input value={editShelf} onChange={(event) => setEditShelf(event.target.value)} required />
+                </label>
+                <label>
+                  Давхар
+                  <input type="number" value={editFloor} onChange={(event) => setEditFloor(event.target.value)} required />
+                </label>
+                <label>
+                  Координат X
+                  <input type="number" value={editMapX} onChange={(event) => setEditMapX(event.target.value)} required />
+                </label>
+                <label>
+                  Координат Y
+                  <input type="number" value={editMapY} onChange={(event) => setEditMapY(event.target.value)} required />
+                </label>
+                <label>
+                  Тэмдэглэл
+                  <input value={editNote} onChange={(event) => setEditNote(event.target.value)} />
+                </label>
+                <div className="action-buttons full">
+                  <button type="submit" className="btn btn-primary">
+                    Шинэчлэх
+                  </button>
+                  <button type="button" className="btn btn-secondary" onClick={onCancelEdit}>
+                    Цуцлах
+                  </button>
+                </div>
+              </form>
+            </article>
+          )}
+        </>
       )}
     </section>
   )
 }
 
 export default LocationsPage
-
-
-
-

@@ -1,9 +1,8 @@
-:root {
-  font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
+﻿:root {
+  font-family: 'Segoe UI', 'Noto Sans', 'Helvetica Neue', sans-serif;
+  line-height: 1.4;
   font-weight: 400;
-  color: #0f172a;
-  background-color: #f8fafc;
+  color: #243229;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -16,30 +15,19 @@
 body {
   margin: 0;
   min-width: 320px;
-  background: #f8fafc;
+  background: #f3f7f4;
 }
 
 h1,
 h2,
 h3,
+h4,
 p {
   margin: 0 0 0.6rem;
 }
 
 a {
   text-decoration: none;
-}
-
-button {
-  border: none;
-  border-radius: 0.45rem;
-  background: #2563eb;
-  color: #ffffff;
-  padding: 0.62rem 0.9rem;
-  min-height: 2.6rem;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 0.95rem;
 }
 
 button:disabled {

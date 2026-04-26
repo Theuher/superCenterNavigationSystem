@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { useAuth } from '../auth/AuthContext'
 import { getMyDetailedProfile, updateMyDetailedProfile } from '../api/userProfile'
 
@@ -51,42 +51,50 @@ const ProfilePage = () => {
   }
 
   return (
-    <section className="grid-section">
-      <form className="card" onSubmit={onSubmit}>
-        <h2>Профайл</h2>
-        <p className="muted">Нэр болон нууц үгээ шинэчилнэ үү.</p>
+    <section className="dashboard-grid">
+      <article className="panel span-8">
+        <h3>Профайлын тохиргоо</h3>
+        <p className="muted">Хувийн мэдээлэл болон нууцлалын тохиргоогоо шинэчилнэ.</p>
         {message && <p className="success">{message}</p>}
-        <label>
-          Овог нэр
-          <input value={fullName} onChange={(e) => setFullName(e.target.value)} minLength={2} required />
-        </label>
-        <label>
-          Шинэ нууц үг (заавал биш)
-          <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" minLength={6} />
-        </label>
-        <label>
-          Утасны дугаар
-          <input value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} />
-        </label>
-        <label>
-          Зургийн холбоос
-          <input value={avatarUrl} onChange={(e) => setAvatarUrl(e.target.value)} />
-        </label>
-        <label>
-          Дэлгэрэнгүй тайлбар
-          <textarea value={bio} onChange={(e) => setBio(e.target.value)} />
-        </label>
-        <button type="submit">Хадгалах</button>
-      </form>
 
-      <article className="card">
+        <form className="form-grid" onSubmit={onSubmit}>
+          <label>
+            Овог нэр
+            <input value={fullName} onChange={(event) => setFullName(event.target.value)} minLength={2} required />
+          </label>
+          <label>
+            Шинэ нууц үг
+            <input value={password} onChange={(event) => setPassword(event.target.value)} type="password" minLength={6} />
+          </label>
+          <label>
+            Утасны дугаар
+            <input value={phoneNumber} onChange={(event) => setPhoneNumber(event.target.value)} />
+          </label>
+          <label>
+            Зургийн холбоос
+            <input value={avatarUrl} onChange={(event) => setAvatarUrl(event.target.value)} />
+          </label>
+          <label className="full">
+            Танилцуулга
+            <textarea value={bio} onChange={(event) => setBio(event.target.value)} />
+          </label>
+          <button type="submit" className="btn btn-primary full">
+            Хадгалах
+          </button>
+        </form>
+      </article>
+
+      <article className="panel span-4">
         <h3>Бүртгэлийн мэдээлэл</h3>
-        <p><strong>И-мэйл:</strong> {user?.email}</p>
-        <p><strong>Эрх:</strong> {user?.roles.map((role) => roleLabelMap[role] || role).join(', ')}</p>
+        <p>
+          <strong>И-мэйл:</strong> {user?.email}
+        </p>
+        <p>
+          <strong>Эрх:</strong> {user?.roles.map((role) => roleLabelMap[role] || role).join(', ')}
+        </p>
       </article>
     </section>
   )
 }
 
 export default ProfilePage
-

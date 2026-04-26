@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes } from 'react-router-dom'
+﻿import { Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './auth/AuthContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
@@ -17,16 +17,18 @@ function App() {
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        <Route element={<ProtectedRoute />}>
-          <Route element={<Layout />}>
-            <Route path="/products" element={<ProductsPage />} />
-            <Route path="/locations" element={<LocationsPage />} />
+        <Route element={<Layout />}>
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/locations" element={<LocationsPage />} />
+
+          <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route element={<ProtectedRoute roles={['ROLE_MANAGER', 'ROLE_ADMIN']} />}>
               <Route path="/roles" element={<RoleManagementPage />} />
             </Route>
-            <Route path="*" element={<Navigate to="/products" replace />} />
           </Route>
+
+          <Route path="*" element={<Navigate to="/products" replace />} />
         </Route>
       </Routes>
     </AuthProvider>
