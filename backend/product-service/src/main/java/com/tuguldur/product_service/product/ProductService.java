@@ -68,7 +68,12 @@ public class ProductService {
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setCategoryId(request.categoryId().trim());
-        product.setLocationId(request.locationId().trim());
+        product.setLocationId(
+                request.locationId() != null ? request.locationId().trim() : null
+        );
+        product.setFloorPlanId(request.floorPlanId());
+        product.setMapX(request.mapX());
+        product.setMapY(request.mapY());
         product.setImageUrl(request.imageUrl());
     }
 }

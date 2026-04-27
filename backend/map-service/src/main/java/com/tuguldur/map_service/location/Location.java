@@ -1,5 +1,9 @@
 package com.tuguldur.map_service.location;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
@@ -9,6 +13,10 @@ import org.springframework.data.mongodb.core.mapping.Document;
 @CompoundIndexes({
         @CompoundIndex(name = "zone_aisle_shelf_idx", def = "{'zone': 1, 'aisle': 1, 'shelf': 1}")
 })
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class Location {
 
     @Id
@@ -24,78 +32,13 @@ public class Location {
 
     private Integer floor;
 
+    private String floorPlanId;
+
     private Double mapX;
 
     private Double mapY;
 
     private String note;
 
-    public String getId() {
-        return id;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getZone() {
-        return zone;
-    }
-
-    public void setZone(String zone) {
-        this.zone = zone;
-    }
-
-    public String getAisle() {
-        return aisle;
-    }
-
-    public void setAisle(String aisle) {
-        this.aisle = aisle;
-    }
-
-    public String getShelf() {
-        return shelf;
-    }
-
-    public void setShelf(String shelf) {
-        this.shelf = shelf;
-    }
-
-    public Integer getFloor() {
-        return floor;
-    }
-
-    public void setFloor(Integer floor) {
-        this.floor = floor;
-    }
-
-    public Double getMapX() {
-        return mapX;
-    }
-
-    public void setMapX(Double mapX) {
-        this.mapX = mapX;
-    }
-
-    public Double getMapY() {
-        return mapY;
-    }
-
-    public void setMapY(Double mapY) {
-        this.mapY = mapY;
-    }
-
-    public String getNote() {
-        return note;
-    }
-
-    public void setNote(String note) {
-        this.note = note;
-    }
 }
 

@@ -1,5 +1,6 @@
 package com.tuguldur.map_service.location;
 
+import com.tuguldur.map_service.floorplan.FloorPlanRepository;
 import com.tuguldur.map_service.location.dto.LocationRequest;
 import java.util.Comparator;
 import java.util.List;
@@ -9,9 +10,11 @@ import org.springframework.stereotype.Service;
 public class LocationService {
 
     private final LocationRepository locationRepository;
+    private final FloorPlanRepository floorPlanRepository;
 
-    public LocationService(LocationRepository locationRepository) {
+    public LocationService(LocationRepository locationRepository, FloorPlanRepository floorPlanRepository) {
         this.locationRepository = locationRepository;
+        this.floorPlanRepository = floorPlanRepository;
     }
 
     public List<Location> findAll() {
@@ -54,11 +57,16 @@ public class LocationService {
     }
 
     private void applyRequest(Location location, LocationRequest request) {
+        String floorPlanId = request.floorPlanId().trim();
+        floorPlanRepository.findById(floorPlanId)
+                .orElseThrow(() -> new IllegalArgumentException("Floor plan not found."));
+
         location.setCode(request.code().trim().toUpperCase());
         location.setZone(request.zone().trim());
         location.setAisle(request.aisle().trim());
         location.setShelf(request.shelf().trim());
         location.setFloor(request.floor());
+        location.setFloorPlanId(floorPlanId);
         location.setMapX(request.mapX());
         location.setMapY(request.mapY());
         location.setNote(request.note());

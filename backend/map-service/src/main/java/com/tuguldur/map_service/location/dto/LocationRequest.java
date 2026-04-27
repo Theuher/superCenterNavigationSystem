@@ -12,6 +12,7 @@ public record LocationRequest(
         @NotBlank @Size(max = 80) String aisle,
         @NotBlank @Size(max = 80) String shelf,
         @NotNull @Min(0) @Max(20) Integer floor,
+        @NotBlank String floorPlanId,
         @NotNull Double mapX,
         @NotNull Double mapY,
         @Size(max = 500) String note
