@@ -5,6 +5,7 @@ import {
   deleteCategory,
   deleteProduct,
   listCategories,
+  listFloorPlans,
   listLocations,
   listProducts,
   updateCategory,
@@ -12,7 +13,8 @@ import {
 } from '../api/catalog'
 import { uploadProductImage } from '../api/cloudinary'
 import { useAuth } from '../auth/AuthContext'
-import type { Category, Location, Product } from '../types'
+import FloorPlanCanvas from '../components/FloorPlanCanvas'
+import type { Category, FloorPlan, Location, Product } from '../types'
 
 const ProductsPage = () => {
   const { hasAnyRole } = useAuth()
@@ -21,6 +23,7 @@ const ProductsPage = () => {
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [locations, setLocations] = useState<Location[]>([])
+  const [floorPlans, setFloorPlans] = useState<FloorPlan[]>([])
   const [loadError, setLoadError] = useState('')
   const [accessNote, setAccessNote] = useState('')
 
@@ -36,7 +39,9 @@ const ProductsPage = () => {
   const [description, setDescription] = useState('')
   const [price, setPrice] = useState('0')
   const [categoryId, setCategoryId] = useState('')
-  const [locationId, setLocationId] = useState('')
+  const [floorPlanId, setFloorPlanId] = useState('')
+  const [mapX, setMapX] = useState('')
+  const [mapY, setMapY] = useState('')
   const [imageUrl, setImageUrl] = useState('')
   const [imageFile, setImageFile] = useState<File | null>(null)
 
@@ -51,7 +56,9 @@ const ProductsPage = () => {
   const [productEditDescription, setProductEditDescription] = useState('')
   const [productEditPrice, setProductEditPrice] = useState('0')
   const [productEditCategoryId, setProductEditCategoryId] = useState('')
-  const [productEditLocationId, setProductEditLocationId] = useState('')
+  const [productEditFloorPlanId, setProductEditFloorPlanId] = useState('')
+  const [productEditMapX, setProductEditMapX] = useState('')
+  const [productEditMapY, setProductEditMapY] = useState('')
   const [productEditImageUrl, setProductEditImageUrl] = useState('')
   const [productEditImageFile, setProductEditImageFile] = useState<File | null>(null)
   const [productDeleteConfirmId, setProductDeleteConfirmId] = useState('')
@@ -63,10 +70,11 @@ const ProductsPage = () => {
     setLoadError('')
     setAccessNote('')
 
-    const [productsResult, categoriesResult, locationsResult] = await Promise.allSettled([
+    const [productsResult, categoriesResult, locationsResult, floorPlansResult] = await Promise.allSettled([
       listProducts(query),
       listCategories(),
       listLocations(),
+      listFloorPlans(),
     ])
 
     if (productsResult.status === 'fulfilled') {
@@ -78,12 +86,19 @@ const ProductsPage = () => {
 
     if (locationsResult.status === 'fulfilled') {
       setLocations(locationsResult.value)
-      if (!locationId && locationsResult.value.length > 0) {
-        setLocationId(locationsResult.value[0].id)
-      }
     } else {
       setLocations([])
       setLoadError('Байршлын мэдээлэл ачаалж чадсангүй. Серверийн хандалтын эрхийг шалгана уу.')
+    }
+
+    if (floorPlansResult.status === 'fulfilled') {
+      setFloorPlans(floorPlansResult.value)
+      if (!floorPlanId && floorPlansResult.value.length > 0) {
+        setFloorPlanId(floorPlansResult.value[0].id)
+      }
+    } else {
+      setFloorPlans([])
+      setLoadError('План зургийн мэдээлэл ачаалж чадсангүй. Серверийн хандалтын эрхийг шалгана уу.')
     }
 
     if (categoriesResult.status === 'fulfilled') {
@@ -103,7 +118,14 @@ const ProductsPage = () => {
   }, [])
 
   const categoryNameById = (id: string) => categories.find((item) => item.id === id)?.name || id
-  const locationCodeById = (id: string) => locations.find((item) => item.id === id)?.code || id
+  const locationCodeById = (id?: string) => {
+    if (!id) return '-'
+    return locations.find((item) => item.id === id)?.code || id
+  }
+  const floorPlanNameById = (id?: string) => {
+    if (!id) return '-'
+    return floorPlans.find((item) => item.id === id)?.name || id
+  }
 
   const filteredProducts = useMemo(
     () =>
@@ -116,13 +138,41 @@ const ProductsPage = () => {
   )
 
   const formatPrice = (value: number) => `₮${value.toLocaleString()}`
-  const detailLocation = detailProduct ? locations.find((location) => location.id === detailProduct.locationId) || null : null
-  const detailMapPosition = (() => {
-    if (!detailLocation) return { top: '48%', left: '46%' }
-    const normalizedX = Math.max(4, Math.min(95, detailLocation.mapX))
-    const normalizedY = Math.max(4, Math.min(95, detailLocation.mapY))
-    return { top: `${normalizedY}%`, left: `${normalizedX}%` }
-  })()
+  const resolvePlacement = (product: Product | null) => {
+    if (!product) return null
+
+    if (typeof product.mapX === 'number' && typeof product.mapY === 'number') {
+      const resolvedFloorPlanId = product.floorPlanId
+        || locations.find((location) => location.id === product.locationId)?.floorPlanId
+      if (!resolvedFloorPlanId) return null
+
+      return {
+        floorPlanId: resolvedFloorPlanId,
+        mapX: product.mapX,
+        mapY: product.mapY,
+      }
+    }
+
+    if (!product.locationId) return null
+    const fallbackLocation = locations.find((location) => location.id === product.locationId)
+    if (!fallbackLocation) return null
+
+    return {
+      floorPlanId: fallbackLocation.floorPlanId,
+      mapX: fallbackLocation.mapX,
+      mapY: fallbackLocation.mapY,
+    }
+  }
+
+  const selectedFloorPlan = floorPlans.find((item) => item.id === floorPlanId) || null
+  const selectedEditFloorPlan = floorPlans.find((item) => item.id === productEditFloorPlanId) || null
+  const detailLocation = detailProduct && detailProduct.locationId
+    ? locations.find((location) => location.id === detailProduct.locationId) || null
+    : null
+  const detailPlacement = resolvePlacement(detailProduct)
+  const detailFloorPlan = detailPlacement
+    ? floorPlans.find((plan) => plan.id === detailPlacement.floorPlanId) || null
+    : null
 
   const onSearch = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -160,13 +210,17 @@ const ProductsPage = () => {
       description: description || undefined,
       price: Number(price),
       categoryId,
-      locationId,
+      floorPlanId: floorPlanId || undefined,
+      mapX: mapX ? Number(mapX) : undefined,
+      mapY: mapY ? Number(mapY) : undefined,
       imageUrl: uploadedImageUrl,
     })
     setName('')
     setSku('')
     setDescription('')
     setPrice('0')
+    setMapX('')
+    setMapY('')
     setImageUrl('')
     setImageFile(null)
     await loadData(search)
@@ -210,7 +264,10 @@ const ProductsPage = () => {
     setProductEditDescription(product.description || '')
     setProductEditPrice(String(product.price))
     setProductEditCategoryId(product.categoryId)
-    setProductEditLocationId(product.locationId)
+    const placement = resolvePlacement(product)
+    setProductEditFloorPlanId(placement?.floorPlanId || '')
+    setProductEditMapX(placement ? String(placement.mapX) : '')
+    setProductEditMapY(placement ? String(placement.mapY) : '')
     setProductEditImageUrl(product.imageUrl || '')
     setProductEditImageFile(null)
   }
@@ -222,7 +279,9 @@ const ProductsPage = () => {
     setProductEditDescription('')
     setProductEditPrice('0')
     setProductEditCategoryId('')
-    setProductEditLocationId('')
+    setProductEditFloorPlanId('')
+    setProductEditMapX('')
+    setProductEditMapY('')
     setProductEditImageUrl('')
     setProductEditImageFile(null)
   }
@@ -250,7 +309,9 @@ const ProductsPage = () => {
       description: productEditDescription || undefined,
       price: Number(productEditPrice),
       categoryId: productEditCategoryId,
-      locationId: productEditLocationId,
+      floorPlanId: productEditFloorPlanId || undefined,
+      mapX: productEditMapX ? Number(productEditMapX) : undefined,
+      mapY: productEditMapY ? Number(productEditMapY) : undefined,
       imageUrl: uploadedImageUrl,
     })
     onCancelProductEdit()
@@ -353,7 +414,11 @@ const ProductsPage = () => {
                   </td>
                   <td data-label="SKU">{product.sku}</td>
                   <td data-label="Ангилал">{categoryNameById(product.categoryId)}</td>
-                  <td data-label="Байршил">{locationCodeById(product.locationId)}</td>
+                  <td data-label="Байршил">
+                    {product.locationId
+                      ? locationCodeById(product.locationId)
+                      : `${floorPlanNameById(product.floorPlanId)} (${product.mapX ?? '-'}, ${product.mapY ?? '-'})`}
+                  </td>
                   <td data-label="Үнэ">{formatPrice(product.price)}</td>
                   {/*<td data-label="Төлөв">*/}
                   {/*  <span className="badge badge-ok">Байгаа</span>*/}
@@ -417,16 +482,36 @@ const ProductsPage = () => {
                 </select>
               </label>
               <label>
-                Байршил
-                <select value={locationId} onChange={(event) => setLocationId(event.target.value)} required>
-                  <option value="">Байршил сонгох</option>
-                  {locations.map((location) => (
-                    <option key={location.id} value={location.id}>
-                      {location.code}
+                План зураг
+                <select value={floorPlanId} onChange={(event) => setFloorPlanId(event.target.value)} required>
+                  <option value="">План зураг сонгох</option>
+                  {floorPlans.map((plan) => (
+                    <option key={plan.id} value={plan.id}>
+                      {plan.name} ({plan.floor}-р давхар)
                     </option>
                   ))}
                 </select>
               </label>
+              <label>
+                X координат
+                <input type="number" step="0.01" value={mapX} onChange={(event) => setMapX(event.target.value)} required />
+              </label>
+              <label>
+                Y координат
+                <input type="number" step="0.01" value={mapY} onChange={(event) => setMapY(event.target.value)} required />
+              </label>
+              <div className="full">
+                <p className="muted">План зураг дээр дарж координат автоматаар сонгоно.</p>
+                <FloorPlanCanvas
+                  imageUrl={selectedFloorPlan?.imageUrl}
+                  marker={mapX && mapY ? { x: Number(mapX), y: Number(mapY) } : null}
+                  onMarkerChange={(point) => {
+                    setMapX(String(point.x))
+                    setMapY(String(point.y))
+                  }}
+                  emptyMessage="План зураг сонгоно уу."
+                />
+              </div>
               <label>
                 Зураг оруулах
                 <input
@@ -485,20 +570,56 @@ const ProductsPage = () => {
                   </select>
                 </label>
                 <label>
-                  Байршил
+                  План зураг
                   <select
-                    value={productEditLocationId}
-                    onChange={(event) => setProductEditLocationId(event.target.value)}
+                    value={productEditFloorPlanId}
+                    onChange={(event) => setProductEditFloorPlanId(event.target.value)}
                     required
                   >
-                    <option value="">Байршил сонгох</option>
-                    {locations.map((location) => (
-                      <option key={location.id} value={location.id}>
-                        {location.code}
+                    <option value="">План зураг сонгох</option>
+                    {floorPlans.map((plan) => (
+                      <option key={plan.id} value={plan.id}>
+                        {plan.name} ({plan.floor}-р давхар)
                       </option>
                     ))}
                   </select>
                 </label>
+                <label>
+                  X координат
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={productEditMapX}
+                    onChange={(event) => setProductEditMapX(event.target.value)}
+                    required
+                  />
+                </label>
+                <label>
+                  Y координат
+                  <input
+                    type="number"
+                    step="0.01"
+                    value={productEditMapY}
+                    onChange={(event) => setProductEditMapY(event.target.value)}
+                    required
+                  />
+                </label>
+                <div className="full">
+                  <p className="muted">План зураг дээр дарж координат засварлана.</p>
+                  <FloorPlanCanvas
+                    imageUrl={selectedEditFloorPlan?.imageUrl}
+                    marker={
+                      productEditMapX && productEditMapY
+                        ? { x: Number(productEditMapX), y: Number(productEditMapY) }
+                        : null
+                    }
+                    onMarkerChange={(point) => {
+                      setProductEditMapX(String(point.x))
+                      setProductEditMapY(String(point.y))
+                    }}
+                    emptyMessage="План зураг сонгоно уу."
+                  />
+                </div>
                 <label>
                   Зураг шинэчлэх
                   <input
@@ -655,7 +776,7 @@ const ProductsPage = () => {
                   </div>
                   <div className="detail-meta-card">
                     <p>Давхар</p>
-                    <strong>{detailLocation ? `${detailLocation.floor}-р давхар` : 'Тодорхойгүй'}</strong>
+                    <strong>{detailFloorPlan ? `${detailFloorPlan.floor}-р давхар` : 'Тодорхойгүй'}</strong>
                   </div>
                 </div>
 
@@ -663,7 +784,9 @@ const ProductsPage = () => {
                   <p className="location-main">
                     {detailLocation
                       ? `${detailLocation.zone} · ${detailLocation.aisle}-р эгнээ · ${detailLocation.shelf}-р тавиур`
-                      : 'Байршлын мэдээлэл байхгүй'}
+                      : detailPlacement
+                        ? 'План зураг дээр координатаар байршсан.'
+                        : 'Байршлын мэдээлэл байхгүй'}
                   </p>
                   {detailLocation?.note && <p className="location-note">{detailLocation.note}</p>}
                 </div>
@@ -673,22 +796,21 @@ const ProductsPage = () => {
 
               <div className="panel">
                 <h4>Байршил</h4>
-                {detailLocation ? (
+                {detailFloorPlan && detailPlacement ? (
                   <>
-                    <p className="muted">Код: {detailLocation.code}</p>
-                    <p className="muted">Бүс: {detailLocation.zone}</p>
-                    <p className="muted">Эгнээ: {detailLocation.aisle}</p>
-                    <p className="muted">Тавиур: {detailLocation.shelf}</p>
-                    <p className="muted">Давхар: {detailLocation.floor}</p>
+                    <p className="muted">План: {detailFloorPlan.name}</p>
+                    <p className="muted">Давхар: {detailFloorPlan.floor}</p>
                     <p className="muted">
-                      Координат: ({detailLocation.mapX}, {detailLocation.mapY})
+                      Координат: ({detailPlacement.mapX}, {detailPlacement.mapY})
                     </p>
-                    <div className="floor-map detail-map">
-                      <span className="map-pin" style={detailMapPosition} />
-                    </div>
+                    <FloorPlanCanvas
+                      imageUrl={detailFloorPlan.imageUrl}
+                      marker={{ x: detailPlacement.mapX, y: detailPlacement.mapY }}
+                      emptyMessage="План зураг байхгүй байна."
+                    />
                   </>
                 ) : (
-                  <p className="muted">Байршлын мэдээлэл олдсонгүй.</p>
+                  <p className="muted">План зураг эсвэл координатын мэдээлэл олдсонгүй.</p>
                 )}
               </div>
             </div>

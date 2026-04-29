@@ -34,7 +34,10 @@ export interface Product {
   description?: string
   price: number
   categoryId: string
-  locationId: string
+  locationId?: string
+  floorPlanId?: string
+  mapX?: number
+  mapY?: number
   imageUrl?: string
 }
 
@@ -45,8 +48,17 @@ export interface Location {
   aisle: string
   shelf: string
   floor: number
+  floorPlanId: string
   mapX: number
   mapY: number
+  note?: string
+}
+
+export interface FloorPlan {
+  id: string
+  name: string
+  floor: number
+  imageUrl: string
   note?: string
 }
 

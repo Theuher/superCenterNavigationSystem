@@ -1,5 +1,5 @@
 import { http } from './http'
-import type { Category, Product, Location } from '../types'
+import type { Category, Product, Location, FloorPlan } from '../types'
 
 export const listCategories = async () => {
   const response = await http.get<Category[]>('/api/v1/categories')
@@ -28,6 +28,7 @@ export const listProducts = async (q?: string, categoryId?: string) => {
 }
 
 export const createProduct = async (payload: Omit<Product, 'id'>) => {
+  console.log(payload)
   const response = await http.post<Product>('/api/v1/products', payload)
   return response.data
 }
@@ -58,6 +59,25 @@ export const updateLocation = async (id: string, payload: Omit<Location, 'id'>) 
 
 export const deleteLocation = async (id: string) => {
   await http.delete(`/api/v1/locations/${id}`)
+}
+
+export const listFloorPlans = async () => {
+  const response = await http.get<FloorPlan[]>('/api/v1/floor-plans')
+  return response.data
+}
+
+export const createFloorPlan = async (payload: Omit<FloorPlan, 'id'>) => {
+  const response = await http.post<FloorPlan>('/api/v1/floor-plans', payload)
+  return response.data
+}
+
+export const updateFloorPlan = async (id: string, payload: Omit<FloorPlan, 'id'>) => {
+  const response = await http.put<FloorPlan>(`/api/v1/floor-plans/${id}`, payload)
+  return response.data
+}
+
+export const deleteFloorPlan = async (id: string) => {
+  await http.delete(`/api/v1/floor-plans/${id}`)
 }
 
 
