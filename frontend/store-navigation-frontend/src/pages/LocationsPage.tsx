@@ -396,7 +396,7 @@ const LocationsPage = () => {
   return (
     <section className="dashboard-grid">
       <article className="panel span-12">
-        <h3>Хайлт ба план зураг</h3>
+        <h3>Хайлт ба план зурагs</h3>
         {loadError && <p className="error">{loadError}</p>}
         {accessNote && <p className="muted">{accessNote}</p>}
         {planError && <p className="error">{planError}</p>}
