@@ -121,7 +121,8 @@ jobs:
           key: ${{ secrets.DROPLET_SSH_KEY }}
           script: |
             cd ~/superCenterNavigationSystem
-            echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u theuher --password-stdin
+            echo ${{ secrets.GHCR_TOKEN }} | docker login ghcr.io -u theuher --password-stdin      
+            docker compose -f docker-compose.staging.yml up -d mysql mongodb
 
             docker compose -f docker-compose.staging.yml pull \
               discovery-service config-service auth-service \
