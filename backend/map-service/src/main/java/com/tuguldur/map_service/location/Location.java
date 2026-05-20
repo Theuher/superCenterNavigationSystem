@@ -5,14 +5,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.CompoundIndex;
-import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
 @Document(collection = "locations")
-@CompoundIndexes({
-        @CompoundIndex(name = "zone_aisle_shelf_idx", def = "{'zone': 1, 'aisle': 1, 'shelf': 1}")
-})
 @Getter
 @Setter
 @AllArgsConstructor

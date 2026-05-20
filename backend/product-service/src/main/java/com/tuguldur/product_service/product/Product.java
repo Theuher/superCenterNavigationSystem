@@ -28,9 +28,6 @@ public class Product {
     @Indexed
     private String name;
 
-    @Indexed(unique = true)
-    private String sku;
-
     private String description;
 
     private BigDecimal price;

@@ -19,11 +19,11 @@ function App() {
 
         <Route element={<Layout />}>
           <Route path="/products" element={<ProductsPage />} />
-          <Route path="/locations" element={<LocationsPage />} />
 
           <Route element={<ProtectedRoute />}>
             <Route path="/profile" element={<ProfilePage />} />
             <Route element={<ProtectedRoute roles={['ROLE_MANAGER', 'ROLE_ADMIN']} />}>
+              <Route path="/locations" element={<LocationsPage />} />
               <Route path="/roles" element={<RoleManagementPage />} />
             </Route>
           </Route>

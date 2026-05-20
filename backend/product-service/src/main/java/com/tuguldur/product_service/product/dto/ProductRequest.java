@@ -8,7 +8,6 @@ import java.math.BigDecimal;
 
 public record ProductRequest(
         @NotBlank @Size(min = 2, max = 160) String name,
-        @NotBlank @Size(min = 3, max = 60) String sku,
         @Size(max = 1000) String description,
         @NotNull @DecimalMin(value = "0.0") BigDecimal price,
         @NotBlank String categoryId,

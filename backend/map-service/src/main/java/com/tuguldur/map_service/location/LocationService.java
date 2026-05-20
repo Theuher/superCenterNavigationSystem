@@ -62,10 +62,6 @@ public class LocationService {
                 .orElseThrow(() -> new IllegalArgumentException("Floor plan not found."));
 
         location.setCode(request.code().trim().toUpperCase());
-        location.setZone(request.zone().trim());
-        location.setAisle(request.aisle().trim());
-        location.setShelf(request.shelf().trim());
-        location.setFloor(request.floor());
         location.setFloorPlanId(floorPlanId);
         location.setMapX(request.mapX());
         location.setMapY(request.mapY());

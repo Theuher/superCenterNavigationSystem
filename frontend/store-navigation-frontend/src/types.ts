@@ -30,7 +30,7 @@ export interface Category {
 export interface Product {
   id: string
   name: string
-  sku: string
+  // sku?: string
   description?: string
   price: number
   categoryId: string

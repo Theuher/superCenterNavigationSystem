@@ -13,7 +13,7 @@ const Layout = () => {
     navigate('/products')
   }
 
-  const canManage = hasAnyRole(['ROLE_STAFF', 'ROLE_MANAGER', 'ROLE_ADMIN'])
+  const canManage = hasAnyRole(['ROLE_MANAGER', 'ROLE_ADMIN'])
 
   const closeMobileMenu = () => setMobileMenuOpen(false)
 
@@ -36,9 +36,11 @@ const Layout = () => {
             <NavLink to="/products" end onClick={closeMobileMenu}>
               Бараа хайлт
             </NavLink>
-            <NavLink to="/locations" onClick={closeMobileMenu}>
-              План зураг
-            </NavLink>
+            {canManage && (
+              <NavLink to="/locations" onClick={closeMobileMenu}>
+                План зураг
+              </NavLink>
+            )}
             {isAuthenticated && (
                 <NavLink to="/profile" onClick={closeMobileMenu}>
                   Миний профайл
@@ -75,9 +77,14 @@ const Layout = () => {
             </div>
 
             <div className="topbar-actions">
-              <Link className="search-link" to="/locations">
+              <Link className="search-link" to="/products">
                 Бараа хайх
               </Link>
+              {canManage && (
+                <Link className="search-link" to="/locations">
+                  План зураг
+                </Link>
+              )}
               {canManage && <span className="role-chip">Удирдлагын эрх</span>}
               {isAuthenticated ? (
                   <button className="btn btn-secondary" onClick={onLogout}>

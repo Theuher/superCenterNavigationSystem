@@ -34,10 +34,11 @@ public class ProductService {
     }
 
     public Product create(ProductRequest request) {
-        productRepository.findBySku(request.sku().trim())
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("Product with this SKU already exists.");
-                });
+//        productRepository.findBySku(request.sku().trim())
+//                .ifPresent(existing -> {
+//                    throw new IllegalArgumentException("Product with this SKU already exists.");
+//                });
+        System.out.println("NEW BACKEND RUNNING");
 
         Product product = new Product();
         applyRequest(product, request);
@@ -47,11 +48,11 @@ public class ProductService {
     public Product update(String id, ProductRequest request) {
         Product product = findById(id);
 
-        productRepository.findBySku(request.sku().trim())
-                .filter(existing -> !existing.getId().equals(id))
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("Product with this SKU already exists.");
-                });
+//        productRepository.findBySku(request.sku().trim())
+//                .filter(existing -> !existing.getId().equals(id))
+//                .ifPresent(existing -> {
+//                    throw new IllegalArgumentException("Product with this SKU already exists.");
+//                });
 
         applyRequest(product, request);
         return productRepository.save(product);
@@ -64,7 +65,7 @@ public class ProductService {
 
     private void applyRequest(Product product, ProductRequest request) {
         product.setName(request.name().trim());
-        product.setSku(request.sku().trim().toUpperCase());
+//        product.setSku(request.sku().trim().toUpperCase());
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setCategoryId(request.categoryId().trim());

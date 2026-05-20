@@ -1,4 +1,5 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+/* eslint-disable react-refresh/only-export-components */
+import { createContext, useContext, useEffect, useMemo, useState, useCallback } from 'react'
 import type { AuthResponse, Profile, Role } from '../types'
 import { setAuthToken } from '../api/http'
 import { getMe, login as loginApi, register as registerApi, updateMe } from '../api/auth'
@@ -67,8 +68,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setAuthToken(token)
   }, [token])
 
-  const applyAuthResponse = (response: AuthResponse) => {
-    const mergedRoles = Array.from(new Set([...toRoleArray(response.user?.roles), ...toRoleArray(response.roles)]))
+  const applyAuthResponse = useCallback((response: AuthResponse) => {
+    const mergedRoles = Array.from(
+      new Set([...toRoleArray(response.user?.roles), ...toRoleArray(response.roles)]),
+    )
     const nextUser: Profile = {
       ...response.user,
       roles: mergedRoles,
@@ -78,44 +81,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(nextUser)
     localStorage.setItem(TOKEN_KEY, response.accessToken)
     localStorage.setItem(USER_KEY, JSON.stringify(nextUser))
-  }
+  }, [])
 
-  const login = async (email: string, password: string) => {
+  const login = useCallback(async (email: string, password: string) => {
     const response = await loginApi({ email, password })
     applyAuthResponse(response)
-  }
+  }, [applyAuthResponse])
 
-  const register = async (fullName: string, email: string, password: string) => {
+  const register = useCallback(async (fullName: string, email: string, password: string) => {
     const response = await registerApi({ fullName, email, password })
     applyAuthResponse(response)
-  }
+  }, [applyAuthResponse])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setToken(null)
     setUser(null)
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(USER_KEY)
     setAuthToken(null)
-  }
+  }, [])
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
+    if (!token) return
     const profile = await getMe()
     const normalizedProfile: Profile = { ...profile, roles: toRoleArray(profile.roles) }
     setUser(normalizedProfile)
     localStorage.setItem(USER_KEY, JSON.stringify(normalizedProfile))
-  }
+  }, [token])
 
-  const saveProfile = async (payload: { fullName?: string; password?: string }) => {
+  const saveProfile = useCallback(async (payload: { fullName?: string; password?: string }) => {
     const profile = await updateMe(payload)
     const normalizedProfile: Profile = { ...profile, roles: toRoleArray(profile.roles) }
     setUser(normalizedProfile)
     localStorage.setItem(USER_KEY, JSON.stringify(normalizedProfile))
-  }
+  }, [])
 
-  const hasAnyRole = (roles: Role[]) => {
+  const hasAnyRole = useCallback((roles: Role[]) => {
     if (!user) return false
     return roles.some((role) => user.roles.includes(role))
-  }
+  }, [user])
 
   const value = useMemo<AuthContextValue>(
     () => ({
@@ -129,7 +133,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       refreshProfile,
       saveProfile,
     }),
-    [token, user],
+    [token, user, hasAnyRole, login, register, logout, refreshProfile, saveProfile],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

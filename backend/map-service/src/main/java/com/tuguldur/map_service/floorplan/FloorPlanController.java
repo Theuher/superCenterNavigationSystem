@@ -26,24 +26,26 @@ public class FloorPlanController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     public List<FloorPlan> findAll() {
         return floorPlanService.findAll();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     public FloorPlan findById(@PathVariable String id) {
         return floorPlanService.findById(id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('STAFF','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public FloorPlan create(@Valid @RequestBody FloorPlanRequest request) {
         return floorPlanService.create(request);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('STAFF','MANAGER','ADMIN')")
+    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     public FloorPlan update(@PathVariable String id, @Valid @RequestBody FloorPlanRequest request) {
         return floorPlanService.update(id, request);
     }
@@ -55,4 +57,6 @@ public class FloorPlanController {
         floorPlanService.delete(id);
     }
 }
+
+
 
