@@ -26,13 +26,13 @@ public class FloorPlanController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+//    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     public List<FloorPlan> findAll() {
         return floorPlanService.findAll();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
+//    @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
     public FloorPlan findById(@PathVariable String id) {
         return floorPlanService.findById(id);
     }

@@ -77,14 +77,14 @@ const Layout = () => {
             </div>
 
             <div className="topbar-actions">
-              <Link className="search-link" to="/products">
-                Бараа хайх
-              </Link>
-              {canManage && (
-                <Link className="search-link" to="/locations">
-                  План зураг
-                </Link>
-              )}
+              {/*<Link className="search-link" to="/products">*/}
+              {/*  Бараа хайх*/}
+              {/*</Link>*/}
+              {/*{canManage && (*/}
+              {/*  <Link className="search-link" to="/locations">*/}
+              {/*    План зураг*/}
+              {/*  </Link>*/}
+              {/*)}*/}
               {canManage && <span className="role-chip">Удирдлагын эрх</span>}
               {isAuthenticated ? (
                   <button className="btn btn-secondary" onClick={onLogout}>
